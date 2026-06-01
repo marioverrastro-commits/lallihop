@@ -959,3 +959,41 @@ html, body {
   text-align: center;
   padding: 12px 0;
 }
+
+/* ===== QUANTITÀ ===== */
+.qty-selector {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--white);
+  border: 1.5px solid var(--beige-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.qty-btn {
+  background: var(--orange-light);
+  border: none;
+  color: var(--orange);
+  font-size: 22px;
+  font-weight: 700;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: background 0.1s;
+}
+
+.qty-btn:active { background: var(--orange-mid); }
+
+.qty-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-dark);
+  min-width: 52px;
+  text-align: center;
+}

@@ -349,9 +349,22 @@
           <button class="chip" data-value="Cappellino" data-ore="1" onclick="selectChip(this,'chip-prodotto')">Cappellino</button>
           <button class="chip" data-value="Borsa" data-ore="4" onclick="selectChip(this,'chip-prodotto')">Borsa</button>
           <button class="chip" data-value="Tovaglietta e bavetta" data-ore="2" onclick="selectChip(this,'chip-prodotto')">Tovaglietta e bavetta</button>
+          <button class="chip" data-value="Bavetta Newborn" data-ore="1" onclick="selectChip(this,'chip-prodotto')">Bavetta Newborn</button>
           <button class="chip" data-value="Astuccio" data-ore="1" onclick="selectChip(this,'chip-prodotto')">Astuccio</button>
           <button class="chip" data-value="Accappatoio" data-ore="2" onclick="selectChip(this,'chip-prodotto')">Accappatoio</button>
           <button class="chip" data-value="Asciugamani" data-ore="2" onclick="selectChip(this,'chip-prodotto')">Asciugamani</button>
+          <button class="chip" data-value="Set Nascita" data-ore="12" onclick="selectChip(this,'chip-prodotto')">🎁 Set Nascita</button>
+          <button class="chip" data-value="Set Asilo" data-ore="6" onclick="selectChip(this,'chip-prodotto')">🎒 Set Asilo</button>
+        </div>
+      </div>
+
+      <!-- Quantità -->
+      <div class="form-section">
+        <label class="form-label">Quantità</label>
+        <div class="qty-selector">
+          <button class="qty-btn" onclick="cambiaQty(-1)">−</button>
+          <span class="qty-value" id="ordine-qty">1</span>
+          <button class="qty-btn" onclick="cambiaQty(1)">＋</button>
         </div>
       </div>
 

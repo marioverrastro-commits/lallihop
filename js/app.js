@@ -40,6 +40,15 @@ document.getElementById('next-month')?.addEventListener('click', () => {
   aggiornaLabelMese();
 });
 
+// ===== QUANTITÀ =====
+let ordineQty = 1;
+
+function cambiaQty(delta) {
+  ordineQty = Math.max(1, ordineQty + delta);
+  const el = document.getElementById('ordine-qty');
+  if (el) el.textContent = ordineQty;
+}
+
 // ===== CHIP SELECTOR =====
 function selectChip(el, groupId) {
   const group = document.getElementById(groupId);
@@ -208,6 +217,7 @@ function salvaOrdine() {
     tipo: 'ordine',
     cliente: cliente,
     prodotto: prodottoEl.dataset.value,
+    quantita: ordineQty,
     ore: parseFloat(prodottoEl.dataset.ore) || 0,
     prezzo: prezzoVal,
     canale: canaleEl.dataset.value,
@@ -250,6 +260,9 @@ function aggiornaCliente(nome, canale) {
 function resetFormOrdine() {
   document.getElementById('ordine-cliente').value = '';
   document.getElementById('ordine-prezzo').value = '';
+  ordineQty = 1;
+  const qtyEl = document.getElementById('ordine-qty');
+  if (qtyEl) qtyEl.textContent = '1';
   document.getElementById('ordine-data').value = new Date().toISOString().split('T')[0];
   document.getElementById('ordine-consegna').value = '';
   document.getElementById('ordine-ricamo').value = '';
@@ -274,7 +287,7 @@ function aggiornaOrdiniRecenti() {
     <div class="order-item">
       <span class="order-dot ${colori[o.stato] || 'yellow'}"></span>
       <div class="order-info">
-        <span class="order-name">${o.prodotto} — ${o.cliente}</span>
+        <span class="order-name">${o.cliente} — ${o.prodotto}${o.quantita > 1 ? ` × ${o.quantita}` : ''}</span>
         <span class="order-sub">${o.stato} · ${o.canale}</span>
       </div>
       <span class="order-price">€ ${o.prezzo.toFixed(0)}</span>
@@ -310,7 +323,7 @@ function caricaOrdini() {
     <div class="ordine-card" onclick="apriModale(${o.id})">
       <span class="order-dot ${colori[o.stato] || 'yellow'}"></span>
       <div class="ordine-card-info">
-        <span class="ordine-card-nome">${o.prodotto} — ${o.cliente}</span>
+        <span class="ordine-card-nome">${o.cliente} — ${o.prodotto}${o.quantita > 1 ? ` × ${o.quantita}` : ''}</span>
         <span class="ordine-card-sub">${o.canale}${o.consegna ? ' · consegna ' + formatData(o.consegna) : ''}</span>
         ${o.ricamo ? '<span class="ricamo-tag">✂️ ricamo</span>' : ''}
       </div>
@@ -343,12 +356,12 @@ function apriModale(id) {
 
   const colori = { 'In attesa': 'yellow', 'In lavorazione': 'blue', 'Consegnato': 'green', 'Annullato': 'red' };
 
-  document.getElementById('modale-titolo').textContent = `${o.prodotto} — ${o.cliente}`;
+  document.getElementById('modale-titolo').textContent = `${o.cliente} — ${o.prodotto}`;
 
   document.getElementById('modale-body').innerHTML = `
     <div class="modale-row"><span class="modale-row-label">Cliente</span><span class="modale-row-value">${o.cliente}</span></div>
-    <div class="modale-row"><span class="modale-row-label">Prodotto</span><span class="modale-row-value">${o.prodotto}</span></div>
-    <div class="modale-row"><span class="modale-row-label">Prezzo</span><span class="modale-row-value">€ ${o.prezzo.toFixed(2)}</span></div>
+    <div class="modale-row"><span class="modale-row-label">Prodotto</span><span class="modale-row-value">${o.prodotto}${o.quantita > 1 ? ` × ${o.quantita}` : ''}</span></div>
+    <div class="modale-row"><span class="modale-row-label">Prezzo</span><span class="modale-row-value">€ ${o.prezzo.toFixed(2)}${o.quantita > 1 ? ` (€ ${(o.prezzo/o.quantita).toFixed(2)} cad.)` : ''}</span></div>
     <div class="modale-row"><span class="modale-row-label">Canale</span><span class="modale-row-value">${o.canale}</span></div>
     ${o.pagamento ? `<div class="modale-row"><span class="modale-row-label">Pagamento</span><span class="modale-row-value">${o.pagamento}</span></div>` : ''}
     ${o.consegna ? `<div class="modale-row"><span class="modale-row-label">Consegna</span><span class="modale-row-value">${formatData(o.consegna)}</span></div>` : ''}
