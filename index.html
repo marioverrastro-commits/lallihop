@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Lalli-hop">
+  <title>Lalli-hop</title>
+  <link rel="apple-touch-icon" href="img/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- HOME SCREEN -->
+  <div id="screen-home" class="screen active">
+
+    <header class="header">
+      <img src="img/logo.png" alt="Lalli-hop" class="header-logo">
+      <div class="header-text">
+        <span class="header-name">Lalli-hop</span>
+        <span class="header-tagline">accessori per bambini</span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- Selettore mese -->
+      <div class="month-selector">
+        <button class="month-btn" id="prev-month">&#8249;</button>
+        <span class="month-label" id="month-label">Giugno 2026</span>
+        <button class="month-btn" id="next-month">&#8250;</button>
+      </div>
+
+      <!-- Metriche -->
+      <div class="metrics-grid">
+        <div class="metric-card blue">
+          <span class="metric-label">Entrate</span>
+          <span class="metric-value" id="metric-entrate">€ 640</span>
+        </div>
+        <div class="metric-card orange">
+          <span class="metric-label">Spese</span>
+          <span class="metric-value" id="metric-spese">€ 180</span>
+        </div>
+        <div class="metric-card green">
+          <span class="metric-label">Margine</span>
+          <span class="metric-value" id="metric-margine">€ 460</span>
+        </div>
+        <div class="metric-card neutral">
+          <span class="metric-label">Ordini aperti</span>
+          <span class="metric-value" id="metric-ordini">5</span>
+        </div>
+      </div>
+
+      <!-- Obiettivo mensile -->
+      <div class="goal-card">
+        <div class="goal-header">
+          <span class="goal-title">Obiettivo mensile</span>
+          <span class="goal-values" id="goal-values">€ 460 / € 750</span>
+        </div>
+        <div class="goal-track">
+          <div class="goal-fill" id="goal-fill" style="width: 61%"></div>
+        </div>
+        <span class="goal-pct" id="goal-pct">61% raggiunto</span>
+      </div>
+
+      <!-- Bottoni azione rapida -->
+      <div class="action-row">
+        <button class="btn-primary" onclick="showScreen('screen-nuovo-ordine')">
+          <span class="btn-icon">＋</span> Nuovo ordine
+        </button>
+        <button class="btn-secondary" onclick="showScreen('screen-nuova-spesa')">
+          <span class="btn-icon">−</span> Registra spesa
+        </button>
+      </div>
+
+      <!-- Ordini recenti -->
+      <div class="section-header">
+        <span class="section-title">Ordini recenti</span>
+        <button class="section-link" onclick="showScreen('screen-ordini')">Vedi tutti</button>
+      </div>
+
+      <div class="orders-list" id="orders-preview">
+        <div class="order-item">
+          <span class="order-dot blue"></span>
+          <div class="order-info">
+            <span class="order-name">Zainetto — Sofia M.</span>
+            <span class="order-sub">In lavorazione · Instagram</span>
+          </div>
+          <span class="order-price">€ 45</span>
+        </div>
+        <div class="order-item">
+          <span class="order-dot yellow"></span>
+          <div class="order-info">
+            <span class="order-name">Carillon — Laura B.</span>
+            <span class="order-sub">In attesa · Facebook</span>
+          </div>
+          <span class="order-price">€ 38</span>
+        </div>
+        <div class="order-item">
+          <span class="order-dot green"></span>
+          <div class="order-info">
+            <span class="order-name">Fasciatoio — Anna R.</span>
+            <span class="order-sub">Consegnato · Mercatino</span>
+          </div>
+          <span class="order-price">€ 55</span>
+        </div>
+      </div>
+
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="showScreen('screen-home')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-item" onclick="showScreen('screen-ordini')">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">Ordini</span>
+      </button>
+      <button class="nav-item" onclick="showScreen('screen-spese')">
+        <span class="nav-icon">💸</span>
+        <span class="nav-label">Spese</span>
+      </button>
+      <button class="nav-item" onclick="showScreen('screen-stats')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Stats</span>
+      </button>
+      <button class="nav-item" onclick="showScreen('screen-clienti')">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label">Clienti</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- SCHERMATA ORDINI -->
+  <div id="screen-ordini" class="screen">
+    <header class="header">
+      <img src="img/logo.png" alt="Lalli-hop" class="header-logo">
+      <div class="header-text">
+        <span class="header-name">Ordini</span>
+        <span class="header-tagline" id="ordini-count">0 ordini</span>
+      </div>
+      <button class="header-add-btn" onclick="showScreen('screen-nuovo-ordine')">＋</button>
+    </header>
+
+    <div class="filtri-bar">
+      <button class="filtro active" data-stato="tutti" onclick="filtraOrdini(this)">Tutti</button>
+      <button class="filtro" data-stato="In attesa" onclick="filtraOrdini(this)">🟡 Attesa</button>
+      <button class="filtro" data-stato="In lavorazione" onclick="filtraOrdini(this)">🔵 Lavoro</button>
+      <button class="filtro" data-stato="Consegnato" onclick="filtraOrdini(this)">🟢 Consegnati</button>
+      <button class="filtro" data-stato="Annullato" onclick="filtraOrdini(this)">🔴 Annullati</button>
+    </div>
+
+    <main class="content" id="ordini-lista">
+      <p class="empty-state">Nessun ordine ancora.<br>Premi ＋ per aggiungerne uno!</p>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="showScreen('screen-home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+      <button class="nav-item active"><span class="nav-icon">📋</span><span class="nav-label">Ordini</span></button>
+      <button class="nav-item" onclick="showScreen('screen-spese')"><span class="nav-icon">💸</span><span class="nav-label">Spese</span></button>
+      <button class="nav-item" onclick="showScreen('screen-stats')"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
+      <button class="nav-item" onclick="showScreen('screen-clienti')"><span class="nav-icon">👥</span><span class="nav-label">Clienti</span></button>
+    </nav>
+  </div>
+
+  <!-- MODALE DETTAGLIO ORDINE -->
+  <div id="modale-ordine" class="modale-overlay" style="display:none" onclick="chiudiModale(event)">
+    <div class="modale-card">
+      <div class="modale-header">
+        <span class="modale-titolo" id="modale-titolo"></span>
+        <button class="modale-close" onclick="document.getElementById('modale-ordine').style.display='none'">✕</button>
+      </div>
+      <div class="modale-body" id="modale-body"></div>
+      <div class="modale-stato-row" id="modale-stato-row"></div>
+      <button class="btn-delete" id="modale-elimina">🗑 Elimina ordine</button>
+    </div>
+  </div>
+
+  <div id="screen-stats" class="screen">
+    <header class="header">
+      <img src="img/logo.png" alt="Lalli-hop" class="header-logo">
+      <div class="header-text">
+        <span class="header-name">Statistiche</span>
+        <span class="header-tagline" id="stats-periodo">Giugno 2026</span>
+      </div>
+    </header>
+
+    <main class="content" id="stats-content">
+
+      <!-- Selettore periodo -->
+      <div class="month-selector">
+        <button class="month-btn" id="stats-prev-periodo">&#8249;</button>
+        <span class="month-label" id="stats-periodo-label">Giugno 2026</span>
+        <button class="month-btn" id="stats-next-periodo">&#8250;</button>
+      </div>
+
+      <!-- Toggle anno/mese -->
+      <div class="chip-grid" id="chip-stats-modo" style="justify-content:center">
+        <button class="chip selected" data-value="mese" onclick="selectChip(this,'chip-stats-modo');aggiornaStatsModo()">Mese</button>
+        <button class="chip" data-value="anno" onclick="selectChip(this,'chip-stats-modo');aggiornaStatsModo()">Anno intero</button>
+      </div>
+
+      <!-- Riepilogo -->
+      <div class="metrics-grid">
+        <div class="metric-card blue">
+          <span class="metric-label">Fatturato</span>
+          <span class="metric-value" id="stats-fatturato">€ 0</span>
+        </div>
+        <div class="metric-card orange">
+          <span class="metric-label">Spese</span>
+          <span class="metric-value" id="stats-spese">€ 0</span>
+        </div>
+        <div class="metric-card green">
+          <span class="metric-label">Margine</span>
+          <span class="metric-value" id="stats-margine">€ 0</span>
+        </div>
+        <div class="metric-card neutral">
+          <span class="metric-label">Ordini totali</span>
+          <span class="metric-value" id="stats-ordini">0</span>
+        </div>
+      </div>
+
+      <!-- Andamento mensile (solo vista anno) -->
+      <div class="stat-card" id="card-andamento">
+        <div class="stat-card-title">Andamento mensile</div>
+        <div class="bar-chart" id="bar-chart-mesi"></div>
+        <div class="bar-chart-labels" id="bar-chart-labels"></div>
+      </div>
+
+      <!-- Prodotti più venduti -->
+      <div class="stat-card">
+        <div class="stat-card-title">Prodotti più venduti</div>
+        <div id="stats-prodotti"></div>
+      </div>
+
+      <!-- Canali di vendita -->
+      <div class="stat-card">
+        <div class="stat-card-title">Canali di vendita</div>
+        <div id="stats-canali"></div>
+      </div>
+
+      <!-- Guadagno orario -->
+      <div class="stat-card">
+        <div class="stat-card-title">Guadagno orario per prodotto</div>
+        <div id="stats-ore"></div>
+      </div>
+
+      <!-- Spese per categoria -->
+      <div class="stat-card">
+        <div class="stat-card-title">Spese per categoria</div>
+        <div id="stats-spese-cat"></div>
+      </div>
+
+      <!-- Metodo di pagamento -->
+      <div class="stat-card">
+        <div class="stat-card-title">Metodo di pagamento</div>
+        <div id="stats-pagamento"></div>
+      </div>
+
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="showScreen('screen-home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+      <button class="nav-item" onclick="showScreen('screen-ordini')"><span class="nav-icon">📋</span><span class="nav-label">Ordini</span></button>
+      <button class="nav-item" onclick="showScreen('screen-spese')"><span class="nav-icon">💸</span><span class="nav-label">Spese</span></button>
+      <button class="nav-item active"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
+      <button class="nav-item" onclick="showScreen('screen-clienti')"><span class="nav-icon">👥</span><span class="nav-label">Clienti</span></button>
+    </nav>
+  </div>
+
+  <div id="screen-clienti" class="screen">
+    <header class="header">
+      <img src="img/logo.png" alt="Lalli-hop" class="header-logo">
+      <div class="header-text">
+        <span class="header-name">Clienti</span>
+        <span class="header-tagline" id="clienti-count">0 clienti</span>
+      </div>
+    </header>
+
+    <div class="search-bar-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="clienti-search" class="search-input" placeholder="Cerca cliente…" oninput="caricaClienti()">
+    </div>
+
+    <main class="content" id="clienti-lista">
+      <p class="empty-state">Nessun cliente ancora.<br>Appariranno automaticamente<br>quando salvi un ordine!</p>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="showScreen('screen-home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+      <button class="nav-item" onclick="showScreen('screen-ordini')"><span class="nav-icon">📋</span><span class="nav-label">Ordini</span></button>
+      <button class="nav-item" onclick="showScreen('screen-spese')"><span class="nav-icon">💸</span><span class="nav-label">Spese</span></button>
+      <button class="nav-item" onclick="showScreen('screen-stats')"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
+      <button class="nav-item active"><span class="nav-icon">👥</span><span class="nav-label">Clienti</span></button>
+    </nav>
+  </div>
+
+  <!-- MODALE DETTAGLIO CLIENTE -->
+  <div id="modale-cliente" class="modale-overlay" style="display:none" onclick="chiudiModaleCliente(event)">
+    <div class="modale-card">
+      <div class="modale-header">
+        <span class="modale-titolo" id="modale-cliente-nome"></span>
+        <button class="modale-close" onclick="document.getElementById('modale-cliente').style.display='none'">✕</button>
+      </div>
+      <div class="modale-body" id="modale-cliente-body"></div>
+      <div id="modale-cliente-ordini"></div>
+      <div id="sezione-note-scoperto" style="display:none">
+        <div class="form-label" style="margin-bottom:6px">📝 Note pagamento</div>
+        <textarea id="note-scoperto" class="input-field textarea" rows="2"
+          placeholder="es. pagherà venerdì, aspetta lo stipendio…"
+          oninput="salvaNoteScroperto()"></textarea>
+      </div>
+      <div class="modale-stato-row" style="gap:8px;margin-top:4px">
+        <button class="chip" id="btn-tag-nuova" onclick="toggleTag('nuova')">🌸 Nuova</button>
+        <button class="chip" id="btn-tag-abituale" onclick="toggleTag('abituale')">🔁 Abituale</button>
+        <button class="chip" id="btn-tag-vip" onclick="toggleTag('vip')">⭐ VIP</button>
+      </div>
+      <button class="btn-delete" id="modale-cliente-elimina">🗑 Elimina cliente</button>
+    </div>
+  </div>
+
+  <div id="screen-nuovo-ordine" class="screen">
+    <header class="header-back">
+      <button class="back-btn" onclick="showScreen('screen-home')">&#8592;</button>
+      <span class="header-title">Nuovo ordine</span>
+    </header>
+    <main class="content">
+
+      <!-- Cliente -->
+      <div class="form-section">
+        <label class="form-label" for="ordine-cliente">Cliente</label>
+        <input type="text" id="ordine-cliente" class="input-field" placeholder="Nome e cognome" autocomplete="off">
+        <div id="autocomplete-list" class="autocomplete-list" style="display:none"></div>
+      </div>
+
+      <!-- Prodotto -->
+      <div class="form-section">
+        <label class="form-label">Prodotto</label>
+        <div class="chip-grid" id="chip-prodotto">
+          <button class="chip" data-value="Zainetto" data-ore="3" onclick="selectChip(this,'chip-prodotto')">Zainetto</button>
+          <button class="chip" data-value="Carillon" data-ore="2" onclick="selectChip(this,'chip-prodotto')">Carillon</button>
+          <button class="chip" data-value="Pochette" data-ore="2" onclick="selectChip(this,'chip-prodotto')">Pochette</button>
+          <button class="chip" data-value="Porta pannolini" data-ore="2" onclick="selectChip(this,'chip-prodotto')">Porta pannolini</button>
+          <button class="chip" data-value="Sacca nascita" data-ore="1.5" onclick="selectChip(this,'chip-prodotto')">Sacca nascita/asilo</button>
+          <button class="chip" data-value="Fasciatoio" data-ore="1" onclick="selectChip(this,'chip-prodotto')">Fasciatoio</button>
+          <button class="chip" data-value="Cappellino" data-ore="1" onclick="selectChip(this,'chip-prodotto')">Cappellino</button>
+          <button class="chip" data-value="Borsa" data-ore="4" onclick="selectChip(this,'chip-prodotto')">Borsa</button>
+          <button class="chip" data-value="Tovaglietta e bavetta" data-ore="2" onclick="selectChip(this,'chip-prodotto')">Tovaglietta e bavetta</button>
+          <button class="chip" data-value="Astuccio" data-ore="1" onclick="selectChip(this,'chip-prodotto')">Astuccio</button>
+          <button class="chip" data-value="Accappatoio" data-ore="2" onclick="selectChip(this,'chip-prodotto')">Accappatoio</button>
+          <button class="chip" data-value="Asciugamani" data-ore="2" onclick="selectChip(this,'chip-prodotto')">Asciugamani</button>
+        </div>
+      </div>
+
+      <!-- Personalizzazione ricamata -->
+      <div class="form-section">
+        <label class="form-label">Personalizzazione ricamata</label>
+        <div class="chip-grid" id="chip-ricamo">
+          <button class="chip" data-value="no" onclick="selectChip(this,'chip-ricamo');toggleRicamo(false)">No</button>
+          <button class="chip" data-value="si" onclick="selectChip(this,'chip-ricamo');toggleRicamo(true)">Sì</button>
+        </div>
+      </div>
+
+      <!-- Dettaglio ricamo (visibile solo se sì) -->
+      <div class="form-section" id="sezione-ricamo" style="display:none">
+        <label class="form-label" for="ordine-ricamo">Dettaglio ricamo <span class="form-optional">(opzionale)</span></label>
+        <input type="text" id="ordine-ricamo" class="input-field" placeholder='es. "Emma" con stelline'>
+      </div>
+
+      <!-- Prezzo -->
+      <div class="form-section">
+        <label class="form-label" for="ordine-prezzo">Prezzo concordato</label>
+        <div class="input-euro">
+          <span class="euro-symbol">€</span>
+          <input type="number" id="ordine-prezzo" class="input-field euro" placeholder="0,00" inputmode="decimal" min="0" step="0.01">
+        </div>
+      </div>
+
+      <!-- Canale -->
+      <div class="form-section">
+        <label class="form-label">Canale</label>
+        <div class="chip-grid" id="chip-canale">
+          <button class="chip" data-value="Instagram" onclick="selectChip(this,'chip-canale')">📸 Instagram</button>
+          <button class="chip" data-value="Facebook" onclick="selectChip(this,'chip-canale')">👤 Facebook</button>
+          <button class="chip" data-value="Mercatino" onclick="selectChip(this,'chip-canale')">🎪 Mercatino</button>
+          <button class="chip" data-value="Passaparola" onclick="selectChip(this,'chip-canale')">🗣 Passaparola</button>
+        </div>
+      </div>
+
+      <!-- Destinazione -->
+      <div class="form-section">
+        <label class="form-label">Destinazione</label>
+        <div class="chip-grid" id="chip-destinazione">
+          <button class="chip" data-value="Regalo" onclick="selectChip(this,'chip-destinazione')">🎁 Regalo</button>
+          <button class="chip" data-value="Uso personale" onclick="selectChip(this,'chip-destinazione')">👤 Uso personale</button>
+        </div>
+      </div>
+
+      <!-- Metodo di pagamento -->
+      <div class="form-section">
+        <label class="form-label">Metodo di pagamento</label>
+        <div class="chip-grid" id="chip-pagamento">
+          <button class="chip" data-value="Contanti" onclick="selectChip(this,'chip-pagamento')">💵 Contanti</button>
+          <button class="chip" data-value="PayPal" onclick="selectChip(this,'chip-pagamento')">🅿️ PayPal</button>
+        </div>
+      </div>
+
+      <!-- Data ordine -->
+      <div class="form-section">
+        <label class="form-label" for="ordine-data">Data ordine</label>
+        <input type="date" id="ordine-data" class="input-field">
+      </div>
+
+      <!-- Data consegna -->
+      <div class="form-section">
+        <label class="form-label" for="ordine-consegna">Data consegna prevista <span class="form-optional">(opzionale)</span></label>
+        <input type="date" id="ordine-consegna" class="input-field">
+      </div>
+
+      <!-- Stato -->
+      <div class="form-section">
+        <label class="form-label">Stato</label>
+        <div class="chip-grid" id="chip-stato">
+          <button class="chip chip-stato yellow selected" data-value="In attesa" onclick="selectChip(this,'chip-stato')">🟡 In attesa</button>
+          <button class="chip chip-stato blue" data-value="In lavorazione" onclick="selectChip(this,'chip-stato')">🔵 In lavorazione</button>
+          <button class="chip chip-stato green" data-value="Consegnato" onclick="selectChip(this,'chip-stato')">🟢 Consegnato</button>
+          <button class="chip chip-stato red" data-value="Annullato" onclick="selectChip(this,'chip-stato')">🔴 Annullato</button>
+        </div>
+      </div>
+
+      <!-- Note -->
+      <div class="form-section">
+        <label class="form-label" for="ordine-note">Note <span class="form-optional">(opzionale)</span></label>
+        <textarea id="ordine-note" class="input-field textarea" placeholder="Richieste particolari, colori, misure…" rows="3"></textarea>
+      </div>
+
+      <!-- Salva -->
+      <button class="btn-save" onclick="salvaOrdine()">Salva ordine</button>
+      <div id="ordine-feedback" class="feedback" style="display:none"></div>
+
+    </main>
+  </div>
+
+  <div id="screen-nuova-spesa" class="screen">
+    <header class="header-back">
+      <button class="back-btn" onclick="showScreen('screen-home')">&#8592;</button>
+      <span class="header-title">Registra spesa</span>
+    </header>
+    <main class="content">
+
+      <!-- Categoria -->
+      <div class="form-section">
+        <label class="form-label">Categoria</label>
+        <div class="chip-grid" id="chip-categoria">
+          <button class="chip" data-value="Merceria" onclick="selectChip(this,'chip-categoria')">🧵 Merceria</button>
+          <button class="chip" data-value="Tessuti" onclick="selectChip(this,'chip-categoria')">🪡 Tessuti</button>
+          <button class="chip" data-value="Packaging" onclick="selectChip(this,'chip-categoria')">📦 Packaging</button>
+          <button class="chip" data-value="Grafica" onclick="selectChip(this,'chip-categoria')">🎨 Grafica</button>
+          <button class="chip" data-value="Fiere/Mercatini" onclick="selectChip(this,'chip-categoria')">🎪 Fiere/Mercatini</button>
+          <button class="chip" data-value="Altro" onclick="selectChip(this,'chip-categoria')">➕ Altro</button>
+        </div>
+      </div>
+
+      <!-- Importo -->
+      <div class="form-section">
+        <label class="form-label" for="spesa-importo">Importo</label>
+        <div class="input-euro">
+          <span class="euro-symbol">€</span>
+          <input type="number" id="spesa-importo" class="input-field euro" placeholder="0,00" inputmode="decimal" min="0" step="0.01">
+        </div>
+      </div>
+
+      <!-- Data -->
+      <div class="form-section">
+        <label class="form-label" for="spesa-data">Data spesa</label>
+        <input type="date" id="spesa-data" class="input-field">
+      </div>
+
+      <!-- Nota -->
+      <div class="form-section">
+        <label class="form-label" for="spesa-nota">Nota <span class="form-optional">(opzionale)</span></label>
+        <textarea id="spesa-nota" class="input-field textarea" placeholder="es. cotone a fiori, nastri colorati…" rows="3"></textarea>
+      </div>
+
+      <!-- Bottone salva -->
+      <button class="btn-save" onclick="salvaSpesa()">Salva spesa</button>
+
+      <!-- Feedback -->
+      <div id="spesa-feedback" class="feedback" style="display:none"></div>
+
+    </main>
+  </div>
+
+  <!-- SCHERMATA SPESE -->
+  <div id="screen-spese" class="screen">
+    <header class="header">
+      <img src="img/logo.png" alt="Lalli-hop" class="header-logo">
+      <div class="header-text">
+        <span class="header-name">Spese</span>
+        <span class="header-tagline" id="spese-count">0 spese</span>
+      </div>
+      <button class="header-add-btn" onclick="showScreen('screen-nuova-spesa')">＋</button>
+    </header>
+
+    <div class="filtri-bar">
+      <button class="filtro active" data-cat="tutti" onclick="filtraSpese(this)">Tutte</button>
+      <button class="filtro" data-cat="Merceria" onclick="filtraSpese(this)">🧵 Merceria</button>
+      <button class="filtro" data-cat="Tessuti" onclick="filtraSpese(this)">🪡 Tessuti</button>
+      <button class="filtro" data-cat="Packaging" onclick="filtraSpese(this)">📦 Packaging</button>
+      <button class="filtro" data-cat="Grafica" onclick="filtraSpese(this)">🎨 Grafica</button>
+      <button class="filtro" data-cat="Fiere/Mercatini" onclick="filtraSpese(this)">🎪 Fiere</button>
+      <button class="filtro" data-cat="Altro" onclick="filtraSpese(this)">➕ Altro</button>
+    </div>
+
+    <main class="content" id="spese-lista">
+      <p class="empty-state">Nessuna spesa ancora.<br>Premi ＋ per aggiungerne una!</p>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="showScreen('screen-home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+      <button class="nav-item" onclick="showScreen('screen-ordini')"><span class="nav-icon">📋</span><span class="nav-label">Ordini</span></button>
+      <button class="nav-item active"><span class="nav-icon">💸</span><span class="nav-label">Spese</span></button>
+      <button class="nav-item" onclick="showScreen('screen-stats')"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
+      <button class="nav-item" onclick="showScreen('screen-clienti')"><span class="nav-icon">👥</span><span class="nav-label">Clienti</span></button>
+    </nav>
+  </div>
+
+  <!-- MODALE DETTAGLIO SPESA -->
+  <div id="modale-spesa" class="modale-overlay" style="display:none" onclick="chiudiModaleSpesa(event)">
+    <div class="modale-card">
+      <div class="modale-header">
+        <span class="modale-titolo" id="modale-spesa-titolo"></span>
+        <button class="modale-close" onclick="document.getElementById('modale-spesa').style.display='none'">✕</button>
+      </div>
+      <div class="modale-body" id="modale-spesa-body"></div>
+      <button class="btn-delete" id="modale-spesa-elimina">🗑 Elimina spesa</button>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
