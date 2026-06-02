@@ -166,7 +166,7 @@
     </nav>
   </div>
 
-  <!-- MODALE DETTAGLIO ORDINE -->
+<!-- MODALE DETTAGLIO ORDINE -->
   <div id="modale-ordine" class="modale-overlay" style="display:none" onclick="chiudiModale(event)">
     <div class="modale-card">
       <div class="modale-header">
@@ -175,6 +175,34 @@
       </div>
       <div class="modale-body" id="modale-body"></div>
       <div class="modale-stato-row" id="modale-stato-row"></div>
+
+      <!-- Acconto e saldo -->
+      <div id="modale-pagamenti" style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+        <div class="modale-ordini-title">Pagamenti ricevuti</div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+            <span style="font-size:11px;font-weight:700;color:var(--orange-dark)">Acconto €</span>
+            <input type="number" id="modale-acconto" class="input-field" placeholder="0" inputmode="decimal" style="padding:8px 10px;font-size:14px">
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+            <span style="font-size:11px;font-weight:700;color:var(--orange-dark)">Data acconto</span>
+            <input type="date" id="modale-acconto-data" class="input-field" style="padding:8px 10px;font-size:13px">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+            <span style="font-size:11px;font-weight:700;color:var(--green-dark)">Saldo €</span>
+            <input type="number" id="modale-saldo" class="input-field" placeholder="0" inputmode="decimal" style="padding:8px 10px;font-size:14px">
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+            <span style="font-size:11px;font-weight:700;color:var(--green-dark)">Data saldo</span>
+            <input type="date" id="modale-saldo-data" class="input-field" style="padding:8px 10px;font-size:13px">
+          </div>
+        </div>
+        <button class="btn-save" style="margin-top:0" onclick="salvaPagamenti()">Salva pagamenti</button>
+      </div>
+
+      <button class="btn-secondary" style="width:100%;margin-top:4px" id="modale-modifica">✏️ Modifica ordine</button>
       <button class="btn-delete" id="modale-elimina">🗑 Elimina ordine</button>
     </div>
   </div>
