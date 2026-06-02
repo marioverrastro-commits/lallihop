@@ -32,12 +32,17 @@ document.getElementById('prev-month')?.addEventListener('click', () => {
   meseCorrente--;
   if (meseCorrente < 0) { meseCorrente = 11; annoCorrente--; }
   aggiornaLabelMese();
+  aggiornaMetriche();
+  aggiornaOrdiniRecenti();
 });
 
 document.getElementById('next-month')?.addEventListener('click', () => {
   meseCorrente++;
   if (meseCorrente > 11) { meseCorrente = 0; annoCorrente++; }
   aggiornaLabelMese();
+  aggiornaMetriche();
+  aggiornaOrdiniRecenti();
+});
 });
 
 // ===== QUANTITÀ =====
