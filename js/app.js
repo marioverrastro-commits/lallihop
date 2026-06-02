@@ -43,7 +43,6 @@ document.getElementById('next-month')?.addEventListener('click', () => {
   aggiornaMetriche();
   aggiornaOrdiniRecenti();
 });
-});
 
 // ===== QUANTITÀ =====
 let ordineQty = 1;
@@ -166,6 +165,16 @@ function aggiornaMetriche() {
   if (elEntrate) elEntrate.textContent = `€ ${totaleEntrate.toFixed(0)}`;
   if (elMargine) elMargine.textContent = `€ ${margine.toFixed(0)}`;
   if (elOrdini) elOrdini.textContent = ordiniAperti;
+
+  // Aggiorna barra obiettivo
+  const obiettivo = 750;
+  const pct = Math.min(100, Math.round((totaleEntrate / obiettivo) * 100));
+  const elGoalValues = document.getElementById('goal-values');
+  const elGoalFill = document.getElementById('goal-fill');
+  const elGoalPct = document.getElementById('goal-pct');
+  if (elGoalValues) elGoalValues.textContent = `€ ${totaleEntrate.toFixed(0)} / € ${obiettivo}`;
+  if (elGoalFill) elGoalFill.style.width = `${pct}%`;
+  if (elGoalPct) elGoalPct.textContent = `${pct}% raggiunto`;
 }
 
 // ===== TOGGLE RICAMO =====
