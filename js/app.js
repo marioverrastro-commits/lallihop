@@ -101,7 +101,6 @@ function salvaSpesa() {
   mostraFeedback(feedback, '✅ Spesa salvata!', 'success');
   resetFormSpesa();
   aggiornaMetriche();
-
   setTimeout(() => showScreen('screen-home'), 1200);
 }
 
@@ -133,23 +132,6 @@ function aggiornaMetriche() {
 
   const totaleSpese = speseDelMese.reduce((acc, s) => acc + s.importo, 0);
 
-  let totaleEntrate = 0;
-  ordini.forEach(o => {
-    if (o.stato === 'Annullato') return;
-    if (o.accontoData) {
-      const d = new Date(o.accontoData);
-      if (d.getMonth() === mese && d.getFullYear() === anno) totaleEntrate += (o.acconto || 0);
-    }
-    if (o.saldoData) {
-      const d = new Date(o.saldoData);
-      if (d.getMonth() === mese && d.getFullYear() === anno) totaleEntrate += (o.saldo || 0);
-    }
-    if (!o.accontoData && !o.saldoData) {
-      const d = new Date(o.data);
-      if (d.getMonth() === mese && d.getFullYear() === anno) totaleEntrate += o.prezzo;
-    }
-  const totaleSpese = speseDelMese.reduce((acc, s) => acc + s.importo, 0);
-
   // Incassato = acconti e saldi ricevuti nel mese
   let totaleIncassato = 0;
   ordini.forEach(o => {
@@ -176,8 +158,34 @@ function aggiornaMetriche() {
     if (residuo > 0) totalePrevisto += residuo;
   });
 
-  const totaleEntrate = totaleIncassato;
   const margine = totaleIncassato - totaleSpese;
+
+  const ordiniAperti = ordini.filter(o =>
+    o.stato === 'In attesa' || o.stato === 'In lavorazione'
+  ).length;
+
+  const elSpese   = document.getElementById('metric-spese');
+  const elEntrate = document.getElementById('metric-entrate');
+  const elMargine = document.getElementById('metric-margine');
+  const elOrdini  = document.getElementById('metric-ordini');
+  const elPrevisto = document.getElementById('metric-previsto');
+
+  if (elSpese)    elSpese.textContent    = `€ ${totaleSpese.toFixed(0)}`;
+  if (elEntrate)  elEntrate.textContent  = `€ ${totaleIncassato.toFixed(0)}`;
+  if (elMargine)  elMargine.textContent  = `€ ${margine.toFixed(0)}`;
+  if (elOrdini)   elOrdini.textContent   = ordiniAperti;
+  if (elPrevisto) elPrevisto.textContent = `€ ${totalePrevisto.toFixed(0)}`;
+
+  // Aggiorna barra obiettivo
+  const obiettivo = 750;
+  const pct = Math.min(100, Math.round((totaleIncassato / obiettivo) * 100));
+  const elGoalValues = document.getElementById('goal-values');
+  const elGoalFill   = document.getElementById('goal-fill');
+  const elGoalPct    = document.getElementById('goal-pct');
+  if (elGoalValues) elGoalValues.textContent = `€ ${totaleIncassato.toFixed(0)} / € ${obiettivo}`;
+  if (elGoalFill)   elGoalFill.style.width   = `${pct}%`;
+  if (elGoalPct)    elGoalPct.textContent    = `${pct}% raggiunto`;
+}
 
 // ===== TOGGLE RICAMO =====
 function toggleRicamo(visibile) {
@@ -257,7 +265,6 @@ function salvaOrdine() {
   resetFormOrdine();
   aggiornaMetriche();
   aggiornaOrdiniRecenti();
-
   setTimeout(() => showScreen('screen-home'), 1200);
 }
 
