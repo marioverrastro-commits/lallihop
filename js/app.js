@@ -149,8 +149,23 @@ function aggiornaMetriche() {
   });
 
   const totaleSpese = speseDelMese.reduce((acc, s) => acc + s.importo, 0);
-  const totaleEntrate = ordiniDelMese.reduce((acc, o) => acc + o.prezzo, 0);
-  const margine = totaleEntrate - totaleSpese;
+
+  let totaleEntrate = 0;
+  ordini.forEach(o => {
+    if (o.stato === 'Annullato') return;
+    if (o.accontoData) {
+      const d = new Date(o.accontoData);
+      if (d.getMonth() === mese && d.getFullYear() === anno) totaleEntrate += (o.acconto || 0);
+    }
+    if (o.saldoData) {
+      const d = new Date(o.saldoData);
+      if (d.getMonth() === mese && d.getFullYear() === anno) totaleEntrate += (o.saldo || 0);
+    }
+    if (!o.accontoData && !o.saldoData) {
+      const d = new Date(o.data);
+      if (d.getMonth() === mese && d.getFullYear() === anno) totaleEntrate += o.prezzo;
+    }
+  });
 
   const ordiniAperti = ordini.filter(o =>
     o.stato === 'In attesa' || o.stato === 'In lavorazione'
@@ -362,37 +377,7 @@ function formatData(dataStr) {
   return `${d.getDate()} ${['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][d.getMonth()]}`;
 }
 
-// ===== MODALE DETTAGLIO ORDINE =====
-function apriModale(id) {
-  const ordini = JSON.parse(localStorage.getItem('lallihop_ordini') || '[]');
-  const o = ordini.find(x => x.id === id);
-  if (!o) return;
-
-  const colori = { 'In attesa': 'yellow', 'In lavorazione': 'blue', 'Consegnato': 'green', 'Annullato': 'red' };
-
-  document.getElementById('modale-titolo').textContent = `${o.cliente} — ${o.prodotto}`;
-
-  document.getElementById('modale-body').innerHTML = `
-    <div class="modale-row"><span class="modale-row-label">Cliente</span><span class="modale-row-value">${o.cliente}</span></div>
-    <div class="modale-row"><span class="modale-row-label">Prodotto</span><span class="modale-row-value">${o.prodotto}${o.quantita > 1 ? ` × ${o.quantita}` : ''}</span></div>
-    <div class="modale-row"><span class="modale-row-label">Prezzo</span><span class="modale-row-value">€ ${o.prezzo.toFixed(2)}${o.quantita > 1 ? ` (€ ${(o.prezzo/o.quantita).toFixed(2)} cad.)` : ''}</span></div>
-    <div class="modale-row"><span class="modale-row-label">Canale</span><span class="modale-row-value">${o.canale}</span></div>
-    ${o.pagamento ? `<div class="modale-row"><span class="modale-row-label">Pagamento</span><span class="modale-row-value">${o.pagamento}</span></div>` : ''}
-    ${o.consegna ? `<div class="modale-row"><span class="modale-row-label">Consegna</span><span class="modale-row-value">${formatData(o.consegna)}</span></div>` : ''}
-    ${o.ricamo ? `<div class="modale-row"><span class="modale-row-label">Ricamo</span><span class="modale-row-value">${o.ricamoDettaglio || 'Sì'}</span></div>` : ''}
-    ${o.note ? `<div class="modale-row"><span class="modale-row-label">Note</span><span class="modale-row-value">${o.note}</span></div>` : ''}
-    <div class="modale-row"><span class="modale-row-label">Guadagno/ora</span><span class="modale-row-value">${o.ore > 0 ? '€ ' + (o.prezzo / o.ore).toFixed(2) + '/h' : '—'}</span></div>
-  `;
-
-  const statiOrdine = ['In attesa', 'In lavorazione', 'Consegnato', 'Annullato'];
-  document.getElementById('modale-stato-row').innerHTML = statiOrdine.map(s => `
-    <button class="chip ${s === o.stato ? 'selected' : ''}"
-      onclick="cambiaStato(${o.id}, '${s}')">${s}</button>
-  `).join('');
-
-  document.getElementById('modale-elimina').onclick = () => eliminaOrdine(o.id);
-  document.getElementById('modale-ordine').style.display = 'flex';
-}
+    ${totIncassato < o.prezzo ? `<div class="modale-row
 
 function cambiaStato(id, nuovoStato) {
   const ordini = JSON.parse(localStorage.getItem('lallihop_ordini') || '[]');
