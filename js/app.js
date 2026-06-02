@@ -74,7 +74,6 @@ function setDataOggi() {
 }
 
 // ===== SALVA SPESA =====
-// I dati vengono salvati nel localStorage del browser
 function salvaSpesa() {
   const categoriaEl = document.querySelector('#chip-categoria .chip.selected');
   const importo = parseFloat(document.getElementById('spesa-importo').value);
@@ -82,19 +81,9 @@ function salvaSpesa() {
   const nota = document.getElementById('spesa-nota').value.trim();
   const feedback = document.getElementById('spesa-feedback');
 
-  // Validazione
-  if (!categoriaEl) {
-    mostraFeedback(feedback, '⚠️ Seleziona una categoria', 'error');
-    return;
-  }
-  if (!importo || importo <= 0) {
-    mostraFeedback(feedback, '⚠️ Inserisci un importo valido', 'error');
-    return;
-  }
-  if (!data) {
-    mostraFeedback(feedback, '⚠️ Inserisci la data', 'error');
-    return;
-  }
+  if (!categoriaEl) { mostraFeedback(feedback, '⚠️ Seleziona una categoria', 'error'); return; }
+  if (!importo || importo <= 0) { mostraFeedback(feedback, '⚠️ Inserisci un importo valido', 'error'); return; }
+  if (!data) { mostraFeedback(feedback, '⚠️ Inserisci la data', 'error'); return; }
 
   const spesa = {
     id: Date.now(),
@@ -105,7 +94,6 @@ function salvaSpesa() {
     nota: nota
   };
 
-  // Salva in localStorage
   const spese = JSON.parse(localStorage.getItem('lallihop_spese') || '[]');
   spese.push(spesa);
   localStorage.setItem('lallihop_spese', JSON.stringify(spese));
@@ -143,11 +131,6 @@ function aggiornaMetriche() {
     return d.getMonth() === mese && d.getFullYear() === anno;
   });
 
-  const ordiniDelMese = ordini.filter(o => {
-    const d = new Date(o.data);
-    return d.getMonth() === mese && d.getFullYear() === anno && o.stato !== 'Annullato';
-  });
-
   const totaleSpese = speseDelMese.reduce((acc, s) => acc + s.importo, 0);
 
   let totaleEntrate = 0;
@@ -167,6 +150,8 @@ function aggiornaMetriche() {
     }
   });
 
+  const margine = totaleEntrate - totaleSpese;
+
   const ordiniAperti = ordini.filter(o =>
     o.stato === 'In attesa' || o.stato === 'In lavorazione'
   ).length;
@@ -181,7 +166,6 @@ function aggiornaMetriche() {
   if (elMargine) elMargine.textContent = `€ ${margine.toFixed(0)}`;
   if (elOrdini) elOrdini.textContent = ordiniAperti;
 
-  // Aggiorna barra obiettivo
   const obiettivo = 750;
   const pct = Math.min(100, Math.round((totaleEntrate / obiettivo) * 100));
   const elGoalValues = document.getElementById('goal-values');
@@ -289,13 +273,13 @@ function aggiornaCliente(nome, canale) {
 function resetFormOrdine() {
   document.getElementById('ordine-cliente').value = '';
   document.getElementById('ordine-prezzo').value = '';
+  document.getElementById('ordine-consegna').value = '';
+  document.getElementById('ordine-ricamo').value = '';
+  document.getElementById('ordine-note').value = '';
   ordineQty = 1;
   const qtyEl = document.getElementById('ordine-qty');
   if (qtyEl) qtyEl.textContent = '1';
   document.getElementById('ordine-data').value = new Date().toISOString().split('T')[0];
-  document.getElementById('ordine-consegna').value = '';
-  document.getElementById('ordine-ricamo').value = '';
-  document.getElementById('ordine-note').value = '';
   document.querySelectorAll('#chip-prodotto .chip, #chip-ricamo .chip, #chip-canale .chip, #chip-destinazione .chip, #chip-pagamento .chip').forEach(c => c.classList.remove('selected'));
   document.querySelectorAll('#chip-stato .chip').forEach(c => c.classList.remove('selected'));
   document.querySelector('#chip-stato .chip[data-value="In attesa"]')?.classList.add('selected');
@@ -322,9 +306,7 @@ function aggiornaOrdiniRecenti() {
       <span class="order-price">€ ${o.prezzo.toFixed(0)}</span>
     </div>
   `).join('');
-}
-
-// ===== SCHERMATA ORDINI =====
+}// ===== SCHERMATA ORDINI =====
 let filtroCorrente = 'tutti';
 
 function caricaOrdini() {
@@ -377,7 +359,164 @@ function formatData(dataStr) {
   return `${d.getDate()} ${['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][d.getMonth()]}`;
 }
 
-    ${totIncassato < o.prezzo ? `<div class="modale-row
+// ===== MODALE DETTAGLIO ORDINE =====
+let ordineCorrenteId = null;
+
+function apriModale(id) {
+  const ordini = JSON.parse(localStorage.getItem('lallihop_ordini') || '[]');
+  const o = ordini.find(x => x.id === id);
+  if (!o) return;
+
+  ordineCorrenteId = id;
+  const colori = { 'In attesa': 'yellow', 'In lavorazione': 'blue', 'Consegnato': 'green', 'Annullato': 'red' };
+
+  document.getElementById('modale-titolo').textContent = `${o.cliente} — ${o.prodotto}`;
+
+  const acconto = o.acconto || 0;
+  const saldo = o.saldo || 0;
+  const totIncassato = acconto + saldo;
+
+  document.getElementById('modale-body').innerHTML = `
+    <div class="modale-row"><span class="modale-row-label">Cliente</span><span class="modale-row-value">${o.cliente}</span></div>
+    <div class="modale-row"><span class="modale-row-label">Prodotto</span><span class="modale-row-value">${o.prodotto}${o.quantita > 1 ? ` × ${o.quantita}` : ''}</span></div>
+    <div class="modale-row"><span class="modale-row-label">Prezzo totale</span><span class="modale-row-value">€ ${o.prezzo.toFixed(2)}</span></div>
+    <div class="modale-row"><span class="modale-row-label">Incassato</span><span class="modale-row-value" style="color:var(--green-dark)">€ ${totIncassato.toFixed(2)}</span></div>
+    ${totIncassato < o.prezzo ? `<div class="modale-row"><span class="modale-row-label">⚠️ Residuo</span><span class="modale-row-value" style="color:#DC2626">€ ${(o.prezzo - totIncassato).toFixed(2)}</span></div>` : ''}
+    <div class="modale-row"><span class="modale-row-label">Canale</span><span class="modale-row-value">${o.canale}</span></div>
+    ${o.pagamento ? `<div class="modale-row"><span class="modale-row-label">Pagamento</span><span class="modale-row-value">${o.pagamento}</span></div>` : ''}
+    ${o.consegna ? `<div class="modale-row"><span class="modale-row-label">Consegna</span><span class="modale-row-value">${formatData(o.consegna)}</span></div>` : ''}
+    ${o.ricamo ? `<div class="modale-row"><span class="modale-row-label">Ricamo</span><span class="modale-row-value">${o.ricamoDettaglio || 'Sì'}</span></div>` : ''}
+    ${o.note ? `<div class="modale-row"><span class="modale-row-label">Note</span><span class="modale-row-value">${o.note}</span></div>` : ''}
+  `;
+
+  const statiOrdine = ['In attesa', 'In lavorazione', 'Consegnato', 'Annullato'];
+  document.getElementById('modale-stato-row').innerHTML = statiOrdine.map(s => `
+    <button class="chip ${s === o.stato ? 'selected' : ''}"
+      onclick="cambiaStato(${o.id}, '${s}')">${s}</button>
+  `).join('');
+
+  document.getElementById('modale-acconto').value = o.acconto || '';
+  document.getElementById('modale-acconto-data').value = o.accontoData || '';
+  document.getElementById('modale-saldo').value = o.saldo || '';
+  document.getElementById('modale-saldo-data').value = o.saldoData || '';
+
+  document.getElementById('modale-elimina').onclick = () => eliminaOrdine(o.id);
+  document.getElementById('modale-modifica').onclick = () => apriModifica(o.id);
+  document.getElementById('modale-ordine').style.display = 'flex';
+}
+
+function salvaPagamenti() {
+  if (!ordineCorrenteId) return;
+  const ordini = JSON.parse(localStorage.getItem('lallihop_ordini') || '[]');
+  const idx = ordini.findIndex(o => o.id === ordineCorrenteId);
+  if (idx < 0) return;
+
+  ordini[idx].acconto = parseFloat(document.getElementById('modale-acconto').value) || 0;
+  ordini[idx].accontoData = document.getElementById('modale-acconto-data').value;
+  ordini[idx].saldo = parseFloat(document.getElementById('modale-saldo').value) || 0;
+  ordini[idx].saldoData = document.getElementById('modale-saldo-data').value;
+
+  localStorage.setItem('lallihop_ordini', JSON.stringify(ordini));
+  document.getElementById('modale-ordine').style.display = 'none';
+  aggiornaMetriche();
+  aggiornaOrdiniRecenti();
+  caricaOrdini();
+
+  const fb = document.createElement('div');
+  fb.textContent = '✅ Pagamenti salvati!';
+  fb.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--green-dark);color:white;padding:10px 20px;border-radius:20px;font-weight:700;font-size:14px;z-index:999';
+  document.body.appendChild(fb);
+  setTimeout(() => fb.remove(), 2000);
+}
+
+function apriModifica(id) {
+  const ordini = JSON.parse(localStorage.getItem('lallihop_ordini') || '[]');
+  const o = ordini.find(x => x.id === id);
+  if (!o) return;
+
+  document.getElementById('modale-ordine').style.display = 'none';
+  document.getElementById('ordine-cliente').value = o.cliente;
+  document.getElementById('ordine-prezzo').value = o.prezzo;
+  document.getElementById('ordine-consegna').value = o.consegna || '';
+  document.getElementById('ordine-data').value = o.data || '';
+  document.getElementById('ordine-ricamo').value = o.ricamoDettaglio || '';
+  document.getElementById('ordine-note').value = o.note || '';
+  ordineQty = o.quantita || 1;
+  document.getElementById('ordine-qty').textContent = ordineQty;
+
+  const selezionaChip = (groupId, value) => {
+    document.querySelectorAll(`#${groupId} .chip`).forEach(c => {
+      c.classList.toggle('selected', c.dataset.value === value);
+    });
+  };
+
+  selezionaChip('chip-prodotto', o.prodotto);
+  selezionaChip('chip-canale', o.canale);
+  selezionaChip('chip-stato', o.stato);
+  selezionaChip('chip-destinazione', o.destinazione);
+  selezionaChip('chip-pagamento', o.pagamento);
+  selezionaChip('chip-ricamo', o.ricamo ? 'si' : 'no');
+  toggleRicamo(o.ricamo);
+
+  const btnSalva = document.querySelector('#screen-nuovo-ordine .btn-save');
+  btnSalva.textContent = 'Aggiorna ordine';
+  btnSalva.onclick = () => aggiornaOrdine(id);
+  document.querySelector('#screen-nuovo-ordine .header-title').textContent = 'Modifica ordine';
+  showScreen('screen-nuovo-ordine');
+}
+
+function aggiornaOrdine(id) {
+  const ordini = JSON.parse(localStorage.getItem('lallihop_ordini') || '[]');
+  const idx = ordini.findIndex(o => o.id === id);
+  if (idx < 0) return;
+
+  const cliente = document.getElementById('ordine-cliente').value.trim();
+  const prodottoEl = document.querySelector('#chip-prodotto .chip.selected');
+  const prezzoVal = parseFloat(document.getElementById('ordine-prezzo').value);
+  const canaleEl = document.querySelector('#chip-canale .chip.selected');
+  const statoEl = document.querySelector('#chip-stato .chip.selected');
+  const feedback = document.getElementById('ordine-feedback');
+
+  if (!cliente) { mostraFeedback(feedback, '⚠️ Inserisci il nome del cliente', 'error'); return; }
+  if (!prodottoEl) { mostraFeedback(feedback, '⚠️ Seleziona un prodotto', 'error'); return; }
+  if (!prezzoVal || prezzoVal <= 0) { mostraFeedback(feedback, '⚠️ Inserisci un prezzo valido', 'error'); return; }
+  if (!canaleEl) { mostraFeedback(feedback, '⚠️ Seleziona il canale', 'error'); return; }
+
+  const ricamoEl = document.querySelector('#chip-ricamo .chip.selected');
+  const destinazioneEl = document.querySelector('#chip-destinazione .chip.selected');
+  const pagamentoEl = document.querySelector('#chip-pagamento .chip.selected');
+
+  ordini[idx] = {
+    ...ordini[idx],
+    cliente,
+    prodotto: prodottoEl.dataset.value,
+    quantita: ordineQty,
+    ore: parseFloat(prodottoEl.dataset.ore) || 0,
+    prezzo: prezzoVal,
+    canale: canaleEl.dataset.value,
+    stato: statoEl ? statoEl.dataset.value : ordini[idx].stato,
+    consegna: document.getElementById('ordine-consegna').value,
+    data: document.getElementById('ordine-data').value,
+    ricamo: ricamoEl ? ricamoEl.dataset.value === 'si' : false,
+    ricamoDettaglio: document.getElementById('ordine-ricamo').value.trim(),
+    note: document.getElementById('ordine-note').value.trim(),
+    destinazione: destinazioneEl ? destinazioneEl.dataset.value : '',
+    pagamento: pagamentoEl ? pagamentoEl.dataset.value : '',
+  };
+
+  localStorage.setItem('lallihop_ordini', JSON.stringify(ordini));
+
+  const btnSalva = document.querySelector('#screen-nuovo-ordine .btn-save');
+  btnSalva.textContent = 'Salva ordine';
+  btnSalva.onclick = salvaOrdine;
+  document.querySelector('#screen-nuovo-ordine .header-title').textContent = 'Nuovo ordine';
+
+  mostraFeedback(document.getElementById('ordine-feedback'), '✅ Ordine aggiornato!', 'success');
+  resetFormOrdine();
+  aggiornaMetriche();
+  aggiornaOrdiniRecenti();
+  setTimeout(() => showScreen('screen-ordini'), 1200);
+}
 
 function cambiaStato(id, nuovoStato) {
   const ordini = JSON.parse(localStorage.getItem('lallihop_ordini') || '[]');
@@ -410,187 +549,12 @@ function chiudiModale(event) {
   }
 }
 
-// ===== SCHERMATA CLIENTI =====
-function caricaClienti() {
-  const lista = document.getElementById('clienti-lista');
-  const count = document.getElementById('clienti-count');
-  const search = document.getElementById('clienti-search')?.value.toLowerCase().trim() || '';
-  if (!lista) return;
-
-  const clienti = JSON.parse(localStorage.getItem('lallihop_clienti') || '[]');
-  const ordini  = JSON.parse(localStorage.getItem('lallihop_ordini')  || '[]');
-
-  const filtrati = clienti.filter(c => c.nome.toLowerCase().includes(search));
-  if (count) count.textContent = `${filtrati.length} client${filtrati.length !== 1 ? 'i' : 'e'}`;
-
-  if (filtrati.length === 0) {
-    lista.innerHTML = search
-      ? '<p class="empty-state">Nessun cliente trovato.</p>'
-      : '<p class="empty-state">Nessun cliente ancora.<br>Appariranno automaticamente<br>quando salvi un ordine!</p>';
-    return;
-  }
-
-  // Ordina per numero ordini decrescente
-  const ordinati = [...filtrati].sort((a, b) => (b.ordini || 0) - (a.ordini || 0));
-
-  lista.innerHTML = ordinati.map(c => {
-    const iniziali = c.nome.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
-    const totale = ordini
-      .filter(o => o.cliente.toLowerCase() === c.nome.toLowerCase() && o.stato === 'Consegnato')
-      .reduce((acc, o) => acc + o.prezzo, 0);
-
-    const tags = [];
-    if (c.tags?.includes('nuova'))    tags.push('<span class="tag tag-nuova">🌸 Nuova</span>');
-    if (c.tags?.includes('abituale')) tags.push('<span class="tag tag-abituale">🔁 Abituale</span>');
-    if (c.tags?.includes('vip'))      tags.push('<span class="tag tag-vip">⭐ VIP</span>');
-
-    return `
-      <div class="cliente-card" onclick="apriModaleCliente('${c.nome.replace(/'/g, "\\'")}')">
-        <div class="avatar">${iniziali}</div>
-        <div class="cliente-info">
-          <span class="cliente-nome">${c.nome}</span>
-          <span class="cliente-sub">${c.ordini || 0} ordine${(c.ordini||0) !== 1 ? 'i' : ''} · ${c.canale}${c.ultimoAcquisto ? ' · ' + formatData(c.ultimoAcquisto) : ''}</span>
-          ${tags.length ? `<div class="cliente-tags">${tags.join('')}</div>` : ''}
-        </div>
-        ${totale > 0 ? `<span class="cliente-totale">€ ${totale.toFixed(0)}</span>` : ''}
-      </div>
-    `;
-  }).join('');
-}
-
-let clienteCorrente = null;
-
-function apriModaleCliente(nome) {
-  const clienti = JSON.parse(localStorage.getItem('lallihop_clienti') || '[]');
-  const ordini  = JSON.parse(localStorage.getItem('lallihop_ordini')  || '[]');
-  const c = clienti.find(x => x.nome === nome);
-  if (!c) return;
-
-  clienteCorrente = c.nome;
-
-  const ordiniCliente = ordini.filter(o => o.cliente.toLowerCase() === c.nome.toLowerCase());
-  const totalePagato   = ordiniCliente.filter(o => o.pagato).reduce((acc, o) => acc + o.prezzo, 0);
-  const totaleInSospeso = ordiniCliente.filter(o => !o.pagato && o.stato !== 'Annullato').reduce((acc, o) => acc + o.prezzo, 0);
-
-  document.getElementById('modale-cliente-nome').textContent = c.nome;
-
-  document.getElementById('modale-cliente-body').innerHTML = `
-    <div class="modale-row"><span class="modale-row-label">Ordini totali</span><span class="modale-row-value">${c.ordini || 0}</span></div>
-    <div class="modale-row">
-      <span class="modale-row-label">✅ Pagato</span>
-      <span class="modale-row-value" style="color:var(--green-dark)">€ ${totalePagato.toFixed(2)}</span>
-    </div>
-    ${totaleInSospeso > 0 ? `
-    <div class="modale-row">
-      <span class="modale-row-label">⚠️ Scoperto</span>
-      <span class="modale-row-value" style="color:#DC2626">€ ${totaleInSospeso.toFixed(2)}</span>
-    </div>` : ''}
-    ${c.ultimoAcquisto ? `<div class="modale-row"><span class="modale-row-label">Ultimo ordine</span><span class="modale-row-value">${formatData(c.ultimoAcquisto)}</span></div>` : ''}
-  `;
-
-  // Storico ordini con toggle pagamento
-  const storicoEl = document.getElementById('modale-cliente-ordini');
-  if (ordiniCliente.length > 0) {
-    const colori = { 'In attesa': 'yellow', 'In lavorazione': 'blue', 'Consegnato': 'green', 'Annullato': 'red' };
-    storicoEl.innerHTML = `
-      <p class="modale-ordini-title">Storico ordini</p>
-      ${[...ordiniCliente].reverse().map(o => `
-        <div class="modale-ordine-item">
-          <span class="modale-ordine-nome">
-            <span class="order-dot ${colori[o.stato]||'yellow'}" style="display:inline-block;margin-right:6px"></span>
-            ${o.prodotto}
-          </span>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="modale-ordine-prezzo">€ ${o.prezzo.toFixed(0)}</span>
-            <button class="btn-pagamento ${o.pagato ? 'pagato' : 'sospeso'}"
-              onclick="togglePagamento(${o.id},'${c.nome.replace(/'/g,"\\'")}')">
-              ${o.pagato ? '💰 Pagato' : '⚠️ Scoperto'}
-            </button>
-          </div>
-        </div>
-      `).join('')}
-    `;
-  } else {
-    storicoEl.innerHTML = '';
-  }
-
-  // Mostra note scoperto solo se c'è uno scoperto
-  const sezioneNote = document.getElementById('sezione-note-scoperto');
-  const noteInput = document.getElementById('note-scoperto');
-  if (sezioneNote && noteInput) {
-    sezioneNote.style.display = totaleInSospeso > 0 ? 'flex' : 'none';
-    noteInput.value = c.noteScroperto || '';
-  }
-
-  // Tag attivi
-  const tags = c.tags || [];
-  ['nuova','abituale','vip'].forEach(t => {
-    const btn = document.getElementById(`btn-tag-${t}`);
-    if (btn) btn.classList.toggle('selected', tags.includes(t));
-  });
-
-  document.getElementById('modale-cliente-elimina').onclick = () => eliminaCliente(c.nome);
-  document.getElementById('modale-cliente').style.display = 'flex';
-}
-
-function togglePagamento(ordineId, nomeCliente) {
-  const ordini = JSON.parse(localStorage.getItem('lallihop_ordini') || '[]');
-  const idx = ordini.findIndex(o => o.id === ordineId);
-  if (idx < 0) return;
-  ordini[idx].pagato = !ordini[idx].pagato;
-  localStorage.setItem('lallihop_ordini', JSON.stringify(ordini));
-  apriModaleCliente(nomeCliente);
-  aggiornaMetriche();
-}
-
-function salvaNoteScroperto() {
-  if (!clienteCorrente) return;
-  const testo = document.getElementById('note-scoperto').value;
-  const clienti = JSON.parse(localStorage.getItem('lallihop_clienti') || '[]');
-  const idx = clienti.findIndex(c => c.nome === clienteCorrente);
-  if (idx < 0) return;
-  clienti[idx].noteScroperto = testo;
-  localStorage.setItem('lallihop_clienti', JSON.stringify(clienti));
-}
-
-function toggleTag(tag) {
-  if (!clienteCorrente) return;
-  const clienti = JSON.parse(localStorage.getItem('lallihop_clienti') || '[]');
-  const idx = clienti.findIndex(c => c.nome === clienteCorrente);
-  if (idx < 0) return;
-
-  const tags = clienti[idx].tags || [];
-  const pos = tags.indexOf(tag);
-  if (pos >= 0) tags.splice(pos, 1);
-  else tags.push(tag);
-  clienti[idx].tags = tags;
-  localStorage.setItem('lallihop_clienti', JSON.stringify(clienti));
-
-  const btn = document.getElementById(`btn-tag-${tag}`);
-  if (btn) btn.classList.toggle('selected', tags.includes(tag));
-  caricaClienti();
-}
-
-function eliminaCliente(nome) {
-  if (!confirm(`Eliminare ${nome}?`)) return;
-  const clienti = JSON.parse(localStorage.getItem('lallihop_clienti') || '[]');
-  localStorage.setItem('lallihop_clienti', JSON.stringify(clienti.filter(c => c.nome !== nome)));
-  document.getElementById('modale-cliente').style.display = 'none';
-  caricaClienti();
-}
-
-function chiudiModaleCliente(event) {
-  if (event.target === document.getElementById('modale-cliente')) {
-    document.getElementById('modale-cliente').style.display = 'none';
-  }
-}
-
 // ===== SCHERMATA SPESE =====
 let filtroCatCorrente = 'tutti';
 
 function caricaSpese() {
-  const lista  = document.getElementById('spese-lista');
-  const count  = document.getElementById('spese-count');
+  const lista = document.getElementById('spese-lista');
+  const count = document.getElementById('spese-count');
   if (!lista) return;
 
   const spese = JSON.parse(localStorage.getItem('lallihop_spese') || '[]');
@@ -667,7 +631,7 @@ function chiudiModaleSpesa(event) {
 // ===== STATISTICHE =====
 let statsAnno = new Date().getFullYear();
 let statsMese = new Date().getMonth();
-let statsModo = 'mese'; // 'mese' o 'anno'
+let statsModo = 'mese';
 
 document.getElementById('stats-prev-periodo')?.addEventListener('click', () => {
   if (statsModo === 'mese') {
@@ -699,7 +663,6 @@ function caricaStats() {
   if (labelEl) labelEl.textContent = testo;
   if (headerEl) headerEl.textContent = testo;
 
-  // Filtra per periodo
   const filtraData = (data) => {
     const d = new Date(data);
     if (statsModo === 'anno') return d.getFullYear() === statsAnno;
@@ -718,7 +681,6 @@ function caricaStats() {
   document.getElementById('stats-margine').textContent   = `€ ${margine.toFixed(0)}`;
   document.getElementById('stats-ordini').textContent    = ordiniPeriodo.length;
 
-  // Grafico mensile solo in modalità anno
   const cardAndamento = document.getElementById('card-andamento');
   if (cardAndamento) cardAndamento.style.display = statsModo === 'anno' ? 'flex' : 'none';
 
@@ -739,7 +701,6 @@ function caricaStats() {
       <div class="bar-col" style="flex:1"><span class="bar-lbl">${m}</span></div>`).join('');
   }
 
-  // Prodotti più venduti
   const prodMap = {};
   ordiniPeriodo.forEach(o => { prodMap[o.prodotto] = (prodMap[o.prodotto] || 0) + 1; });
   const prodSorted = Object.entries(prodMap).sort((a,b) => b[1]-a[1]);
@@ -754,7 +715,6 @@ function caricaStats() {
         </div>`).join('')
     : '<p class="stat-empty">Nessun dato</p>';
 
-  // Canali di vendita
   const canaleMap = {};
   ordiniPeriodo.forEach(o => { canaleMap[o.canale] = (canaleMap[o.canale] || 0) + o.prezzo; });
   const canaleSorted = Object.entries(canaleMap).sort((a,b) => b[1]-a[1]);
@@ -770,7 +730,6 @@ function caricaStats() {
         </div>`).join('')
     : '<p class="stat-empty">Nessun dato</p>';
 
-  // Guadagno orario
   const oreMap = {};
   ordiniPeriodo.forEach(o => {
     if (!o.ore || o.ore <= 0) return;
@@ -791,7 +750,6 @@ function caricaStats() {
         </div>`;}).join('')
     : '<p class="stat-empty">Nessun dato</p>';
 
-  // Spese per categoria
   const catMap = {};
   spesePeriodo.forEach(s => { catMap[s.categoria] = (catMap[s.categoria] || 0) + s.importo; });
   const catSorted = Object.entries(catMap).sort((a,b) => b[1]-a[1]);
@@ -806,7 +764,6 @@ function caricaStats() {
         </div>`).join('')
     : '<p class="stat-empty">Nessun dato</p>';
 
-  // Metodo di pagamento
   const pagMap = {};
   ordiniPeriodo.forEach(o => {
     if (!o.pagamento) return;
@@ -824,6 +781,177 @@ function caricaStats() {
           <span class="stat-row-value" style="color:var(--green-dark)">€ ${tot.toFixed(0)}</span>
         </div>`).join('')
     : '<p class="stat-empty">Nessun dato</p>';
+}
+
+// ===== SCHERMATA CLIENTI =====
+function caricaClienti() {
+  const lista = document.getElementById('clienti-lista');
+  const count = document.getElementById('clienti-count');
+  const search = document.getElementById('clienti-search')?.value.toLowerCase().trim() || '';
+  if (!lista) return;
+
+  const clienti = JSON.parse(localStorage.getItem('lallihop_clienti') || '[]');
+  const ordini  = JSON.parse(localStorage.getItem('lallihop_ordini')  || '[]');
+
+  const filtrati = clienti.filter(c => c.nome.toLowerCase().includes(search));
+  if (count) count.textContent = `${filtrati.length} client${filtrati.length !== 1 ? 'i' : 'e'}`;
+
+  if (filtrati.length === 0) {
+    lista.innerHTML = search
+      ? '<p class="empty-state">Nessun cliente trovato.</p>'
+      : '<p class="empty-state">Nessun cliente ancora.<br>Appariranno automaticamente<br>quando salvi un ordine!</p>';
+    return;
+  }
+
+  const ordinati = [...filtrati].sort((a, b) => (b.ordini || 0) - (a.ordini || 0));
+
+  lista.innerHTML = ordinati.map(c => {
+    const iniziali = c.nome.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
+    const totale = ordini
+      .filter(o => o.cliente.toLowerCase() === c.nome.toLowerCase() && o.stato !== 'Annullato')
+      .reduce((acc, o) => acc + o.prezzo, 0);
+
+    const tags = [];
+    if (c.tags?.includes('nuova'))    tags.push('<span class="tag tag-nuova">🌸 Nuova</span>');
+    if (c.tags?.includes('abituale')) tags.push('<span class="tag tag-abituale">🔁 Abituale</span>');
+    if (c.tags?.includes('vip'))      tags.push('<span class="tag tag-vip">⭐ VIP</span>');
+
+    return `
+      <div class="cliente-card" onclick="apriModaleCliente('${c.nome.replace(/'/g, "\\'")}')">
+        <div class="avatar">${iniziali}</div>
+        <div class="cliente-info">
+          <span class="cliente-nome">${c.nome}</span>
+          <span class="cliente-sub">${c.ordini || 0} ordine${(c.ordini||0) !== 1 ? 'i' : ''} · ${c.ultimoAcquisto ? formatData(c.ultimoAcquisto) : ''}</span>
+          ${tags.length ? `<div class="cliente-tags">${tags.join('')}</div>` : ''}
+        </div>
+        ${totale > 0 ? `<span class="cliente-totale">€ ${totale.toFixed(0)}</span>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+let clienteCorrente = null;
+
+function apriModaleCliente(nome) {
+  const clienti = JSON.parse(localStorage.getItem('lallihop_clienti') || '[]');
+  const ordini  = JSON.parse(localStorage.getItem('lallihop_ordini')  || '[]');
+  const c = clienti.find(x => x.nome === nome);
+  if (!c) return;
+
+  clienteCorrente = c.nome;
+
+  const ordiniCliente = ordini.filter(o => o.cliente.toLowerCase() === c.nome.toLowerCase());
+  const totalePagato = ordiniCliente.filter(o => o.pagato).reduce((acc, o) => acc + o.prezzo, 0);
+  const totaleInSospeso = ordiniCliente.filter(o => !o.pagato && o.stato !== 'Annullato').reduce((acc, o) => acc + o.prezzo, 0);
+
+  document.getElementById('modale-cliente-nome').textContent = c.nome;
+
+  document.getElementById('modale-cliente-body').innerHTML = `
+    <div class="modale-row"><span class="modale-row-label">Ordini totali</span><span class="modale-row-value">${c.ordini || 0}</span></div>
+    <div class="modale-row">
+      <span class="modale-row-label">✅ Pagato</span>
+      <span class="modale-row-value" style="color:var(--green-dark)">€ ${totalePagato.toFixed(2)}</span>
+    </div>
+    ${totaleInSospeso > 0 ? `
+    <div class="modale-row">
+      <span class="modale-row-label">⚠️ Scoperto</span>
+      <span class="modale-row-value" style="color:#DC2626">€ ${totaleInSospeso.toFixed(2)}</span>
+    </div>` : ''}
+    ${c.ultimoAcquisto ? `<div class="modale-row"><span class="modale-row-label">Ultimo ordine</span><span class="modale-row-value">${formatData(c.ultimoAcquisto)}</span></div>` : ''}
+  `;
+
+  const storicoEl = document.getElementById('modale-cliente-ordini');
+  if (ordiniCliente.length > 0) {
+    const colori = { 'In attesa': 'yellow', 'In lavorazione': 'blue', 'Consegnato': 'green', 'Annullato': 'red' };
+    storicoEl.innerHTML = `
+      <p class="modale-ordini-title">Storico ordini</p>
+      ${[...ordiniCliente].reverse().map(o => `
+        <div class="modale-ordine-item">
+          <span class="modale-ordine-nome">
+            <span class="order-dot ${colori[o.stato]||'yellow'}" style="display:inline-block;margin-right:6px"></span>
+            ${o.prodotto}
+          </span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="modale-ordine-prezzo">€ ${o.prezzo.toFixed(0)}</span>
+            <button class="btn-pagamento ${o.pagato ? 'pagato' : 'sospeso'}"
+              onclick="togglePagamento(${o.id},'${c.nome.replace(/'/g,"\\'")}')">
+              ${o.pagato ? '💰 Pagato' : '⚠️ Scoperto'}
+            </button>
+          </div>
+        </div>
+      `).join('')}
+    `;
+  } else {
+    storicoEl.innerHTML = '';
+  }
+
+  const sezioneNote = document.getElementById('sezione-note-scoperto');
+  const noteInput = document.getElementById('note-scoperto');
+  if (sezioneNote && noteInput) {
+    sezioneNote.style.display = totaleInSospeso > 0 ? 'flex' : 'none';
+    noteInput.value = c.noteScroperto || '';
+  }
+
+  const tags = c.tags || [];
+  ['nuova','abituale','vip'].forEach(t => {
+    const btn = document.getElementById(`btn-tag-${t}`);
+    if (btn) btn.classList.toggle('selected', tags.includes(t));
+  });
+
+  document.getElementById('modale-cliente-elimina').onclick = () => eliminaCliente(c.nome);
+  document.getElementById('modale-cliente').style.display = 'flex';
+}
+
+function togglePagamento(ordineId, nomeCliente) {
+  const ordini = JSON.parse(localStorage.getItem('lallihop_ordini') || '[]');
+  const idx = ordini.findIndex(o => o.id === ordineId);
+  if (idx < 0) return;
+  ordini[idx].pagato = !ordini[idx].pagato;
+  localStorage.setItem('lallihop_ordini', JSON.stringify(ordini));
+  apriModaleCliente(nomeCliente);
+  aggiornaMetriche();
+}
+
+function salvaNoteScroperto() {
+  if (!clienteCorrente) return;
+  const testo = document.getElementById('note-scoperto').value;
+  const clienti = JSON.parse(localStorage.getItem('lallihop_clienti') || '[]');
+  const idx = clienti.findIndex(c => c.nome === clienteCorrente);
+  if (idx < 0) return;
+  clienti[idx].noteScroperto = testo;
+  localStorage.setItem('lallihop_clienti', JSON.stringify(clienti));
+}
+
+function toggleTag(tag) {
+  if (!clienteCorrente) return;
+  const clienti = JSON.parse(localStorage.getItem('lallihop_clienti') || '[]');
+  const idx = clienti.findIndex(c => c.nome === clienteCorrente);
+  if (idx < 0) return;
+
+  const tags = clienti[idx].tags || [];
+  const pos = tags.indexOf(tag);
+  if (pos >= 0) tags.splice(pos, 1);
+  else tags.push(tag);
+  clienti[idx].tags = tags;
+  localStorage.setItem('lallihop_clienti', JSON.stringify(clienti));
+
+  const btn = document.getElementById(`btn-tag-${tag}`);
+  if (btn) btn.classList.toggle('selected', tags.includes(tag));
+  caricaClienti();
+}
+
+function eliminaCliente(nome) {
+  if (!confirm(`Eliminare ${nome}?`)) return;
+  const clienti = JSON.parse(localStorage.getItem('lallihop_clienti') || '[]');
+  localStorage.setItem('lallihop_clienti', JSON.stringify(clienti.filter(c => c.nome !== nome)));
+  document.getElementById('modale-cliente').style.display = 'none';
+  caricaClienti();
+}
+
+function chiudiModaleCliente(event) {
+  if (event.target === document.getElementById('modale-cliente')) {
+    document.getElementById('modale-cliente').style.display = 'none';
+  }
 }
 
 // ===== INIT =====
