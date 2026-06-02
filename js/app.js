@@ -148,33 +148,36 @@ function aggiornaMetriche() {
       const d = new Date(o.data);
       if (d.getMonth() === mese && d.getFullYear() === anno) totaleEntrate += o.prezzo;
     }
+  const totaleSpese = speseDelMese.reduce((acc, s) => acc + s.importo, 0);
+
+  // Incassato = acconti e saldi ricevuti nel mese
+  let totaleIncassato = 0;
+  ordini.forEach(o => {
+    if (o.stato === 'Annullato') return;
+    if (o.accontoData) {
+      const d = new Date(o.accontoData);
+      if (d.getMonth() === mese && d.getFullYear() === anno) totaleIncassato += (o.acconto || 0);
+    }
+    if (o.saldoData) {
+      const d = new Date(o.saldoData);
+      if (d.getMonth() === mese && d.getFullYear() === anno) totaleIncassato += (o.saldo || 0);
+    }
   });
 
-  const margine = totaleEntrate - totaleSpese;
+  // Previsto = ordini con data consegna nel mese, non ancora completamente pagati
+  let totalePrevisto = 0;
+  ordini.forEach(o => {
+    if (o.stato === 'Annullato') return;
+    if (!o.consegna) return;
+    const d = new Date(o.consegna);
+    if (d.getMonth() !== mese || d.getFullYear() !== anno) return;
+    const giaPagato = (o.acconto || 0) + (o.saldo || 0);
+    const residuo = o.prezzo - giaPagato;
+    if (residuo > 0) totalePrevisto += residuo;
+  });
 
-  const ordiniAperti = ordini.filter(o =>
-    o.stato === 'In attesa' || o.stato === 'In lavorazione'
-  ).length;
-
-  const elSpese = document.getElementById('metric-spese');
-  const elEntrate = document.getElementById('metric-entrate');
-  const elMargine = document.getElementById('metric-margine');
-  const elOrdini = document.getElementById('metric-ordini');
-
-  if (elSpese) elSpese.textContent = `€ ${totaleSpese.toFixed(0)}`;
-  if (elEntrate) elEntrate.textContent = `€ ${totaleEntrate.toFixed(0)}`;
-  if (elMargine) elMargine.textContent = `€ ${margine.toFixed(0)}`;
-  if (elOrdini) elOrdini.textContent = ordiniAperti;
-
-  const obiettivo = 750;
-  const pct = Math.min(100, Math.round((totaleEntrate / obiettivo) * 100));
-  const elGoalValues = document.getElementById('goal-values');
-  const elGoalFill = document.getElementById('goal-fill');
-  const elGoalPct = document.getElementById('goal-pct');
-  if (elGoalValues) elGoalValues.textContent = `€ ${totaleEntrate.toFixed(0)} / € ${obiettivo}`;
-  if (elGoalFill) elGoalFill.style.width = `${pct}%`;
-  if (elGoalPct) elGoalPct.textContent = `${pct}% raggiunto`;
-}
+  const totaleEntrate = totaleIncassato;
+  const margine = totaleIncassato - totaleSpese;
 
 // ===== TOGGLE RICAMO =====
 function toggleRicamo(visibile) {
